@@ -1,48 +1,58 @@
 var mysql = require('mysql');
-var Table = require('cli-table');
 var colors = require('colors');
 
 var connection = mysql.createConnection({
-  host     : process.env.IP,
-  user     : process.env.C9_USER,
-  password : '',
-  database : 'addressbook'
+  host: process.env.IP,
+  user: process.env.C9_USER,
+  password: '',
+  database: 'addressbook'
 });
 
-//initialize the table
-var table = new Table({
-    head: ['id', 'email']
-});
 
-connection.query("select id, email from Account limit 5", function(err, ArrayOfRows) {
-  // In this callback, rows will be all the rows of the query, in a regular array of regular objects
-  // fields is not used very often, but it will contain a listing of the columns with some metadata
-  if(err){
-    console.log(err);
-  }
-  else if(ArrayOfRows){
+connection.query("select Account.email,AddressBook.name,Account.id from Account join AddressBook on Account.id= AddressBook.accountId", function(err, results) {
+
+  var newAccount = []
+  results.forEach(function(oldAccount, index) {
+    var found;
+    var counter;
     
-    // console.log(ArrayOfRows);
-    for(var i=0; i < ArrayOfRows.length; i++){
-      // console.log(ArrayOfRows[i].id);
-      table.push([
-      ArrayOfRows[i].id.toString().bold, ArrayOfRows[i].email
-        ]);
-    }  
-    console.log(table.toString());
-  }
+    newAccount.forEach(function(oldAccount, index) {
+      if (newAccount.id === oldAccount.id) {
+        found = true;
+        counter = index;
+      }
+    })
+    if (!found) {
+      var account = {
+        'id': oldAccount.id,
+        'email': oldAccount.email,
+        books: [oldAccount.name]
+      };
+      newAccount.push(account);
+    }
+    else {
+      newAccount[counter].books.push(oldAccount.name);
+    }
+  })
+     console.log(newAccount);
+    newAccount.forEach(function(account){
+      console.log(account.id+ '. '+ account.email);
+      account.books.forEach(function(book) {
+          console.log('    ' + book);
+      })
+  })
+
+  connection.end();
 });
 
-connection.end();
+// Here is an example usage:
+// rows.forEach(function(row) {
+//   console.log('#' + row.id + ': ' + row.email);
+// });
+// This code will output lines like:
+// #1: john@smith.com
+// #2: abc@def.com
+// #5: xx@yy.com
 
-  // Here is an example usage:
-  // rows.forEach(function(row) {
-  //   console.log('#' + row.id + ': ' + row.email);
-  // });
-  // This code will output lines like:
-  // #1: john@smith.com
-  // #2: abc@def.com
-  // #5: xx@yy.com
-  
-  // Note that IDs do not have to be contiguous. If we DELETE rows, there will be holes in the ID list. This is normal.
+// Note that IDs do not have to be contiguous. If we DELETE rows, there will be holes in the ID list. This is normal.
 // });
