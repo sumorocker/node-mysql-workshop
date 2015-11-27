@@ -1,17 +1,19 @@
 var mysql = require('mysql');
-var colors = require('colors');
 
 var connection = mysql.createConnection({
   host: process.env.IP,
   user: process.env.C9_USER,
-  password: '',
   database: 'addressbook'
 });
 
-
-connection.query("select Account.email,AddressBook.name,Account.id from Account join AddressBook on Account.id= AddressBook.accountId", function(err, results) {
-
+connection.query('select Account.id, AddressBook.name, Account.email from Account join AddressBook on Account.id=AddressBook.accountId', function(err, results) {
+  if(err){
+    console.log("error")
+  }
+  else {
+    
   var newAccount = []
+  
   results.forEach(function(oldAccount, index) {
     var found;
     var counter;
@@ -24,8 +26,8 @@ connection.query("select Account.email,AddressBook.name,Account.id from Account 
     })
     if (!found) {
       var account = {
-        'id': oldAccount.id,
-        'email': oldAccount.email,
+        id: oldAccount.id,
+        email: oldAccount.email,
         books: [oldAccount.name]
       };
       newAccount.push(account);
@@ -34,14 +36,13 @@ connection.query("select Account.email,AddressBook.name,Account.id from Account 
       newAccount[counter].books.push(oldAccount.name);
     }
   })
-     console.log(newAccount);
     newAccount.forEach(function(account){
       console.log(account.id+ '. '+ account.email);
       account.books.forEach(function(book) {
           console.log('    ' + book);
       })
   })
-
+}
   connection.end();
 });
 
